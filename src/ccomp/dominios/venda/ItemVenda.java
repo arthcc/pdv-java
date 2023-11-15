@@ -11,7 +11,6 @@ public class ItemVenda extends EntidadeBase {
 	private int quantidadeItem;
 	private BigDecimal valorTotalItem; 
 	
-	
 	public ItemVenda(long idProduto, BigDecimal precoItem, int quantidadeItem, BigDecimal valorTotalItem) {
 		this.idProduto = idProduto;
 		this.precoItem = precoItem;
