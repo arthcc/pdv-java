@@ -5,8 +5,9 @@ import ccomp.dominios.venda.ItemVenda;
 /**
  * Essa classe apenas será usada para adicionar os títulos
  * dos valores de ItemVenda no ListagemItem. 
+ * !!!APENAS!!!
  **/
-public class ItemVendaDescricaoLista extends ItemVenda {
+class ItemVendaDescricaoLista extends ItemVenda {
 	
 	@Override
 	public int hashCode() {

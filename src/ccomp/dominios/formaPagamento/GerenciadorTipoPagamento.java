@@ -23,7 +23,8 @@ public class GerenciadorTipoPagamento {
 		registrarPagamento(PAGAMENTO_PADRAO);
 		registrarPagamento("Vale Alimentação");
 		registrarPagamento("Vale Refeição");
-		registrarPagamento("Cartão de Crédito/Débito");
+		registrarPagamento("Cartão de Crédito");
+		registrarPagamento("Cartão de Débito");
 
 	}
 
@@ -44,12 +45,14 @@ public class GerenciadorTipoPagamento {
 
 
 	public void deletarUnidade(Pagamento pagamento) {
-
 		validarNaoNulo(pagamento, "Pagamento");
 		pagamentoRepositorio.deletar(pagamento);
 
 	}
 
+	public Collection<Pagamento> todos() {
+		return pagamentoRepositorio.todos();
+	}
 
 	public Pagamento encontrarPagamentoPorId(Long id) {
 		

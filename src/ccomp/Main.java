@@ -1,14 +1,10 @@
 package ccomp;
 
 import java.awt.EventQueue;
-import java.math.BigDecimal;
-import java.time.LocalDateTime;
 
 import javax.management.InstanceAlreadyExistsException;
 import javax.swing.UIManager;
 
-import ccomp.core.impl.EmMemoriaRepositorio;
-import ccomp.dominios.produto.Produto;
 import ccomp.facade.GerenciadorSistemaFacade;
 import ccomp.ui.FramePrincipal;
 

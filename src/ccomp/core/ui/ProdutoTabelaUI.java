@@ -52,7 +52,8 @@ public class ProdutoTabelaUI extends JTable {
 		limparTabela();
 		gerenciadorProduto.obterTodosProdutos()
 			.stream()
-			.filter(p -> filtroDeNome == null || (filtroDeNome != null && p.getNome().contains(filtroDeNome.toUpperCase())))
+			.filter(p -> filtroDeNome == null || (filtroDeNome != null && p.getNome()
+				.contains(filtroDeNome.toUpperCase())) || filtroDeNome.equals("%"))
 			.forEach(produto -> 
 			{
 				tableModel.addRow(criarDadosProduto(produto));

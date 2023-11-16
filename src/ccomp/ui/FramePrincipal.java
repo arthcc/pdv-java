@@ -15,6 +15,7 @@ import ccomp.ui.produto.FrameCadastroProduto;
 import ccomp.ui.produto.FrameLocalizadorProduto;
 import ccomp.ui.unidade.FrameCadastroUnidade;
 import ccomp.ui.pagamento.FrameCadastroPagamento;
+import ccomp.ui.pdv.FramePontoDeVendas;
 
 import javax.swing.border.CompoundBorder;
 import javax.swing.JSeparator;
@@ -64,6 +65,11 @@ public class FramePrincipal extends JFrame {
 		
 		
 		JButton btnPontoDeVendas = new JButton("PONTO DE VENDAS");
+		btnPontoDeVendas.addActionListener(new ActionListener() {
+			public void actionPerformed(ActionEvent e) {
+				FramePontoDeVendas.criarPontoDeVendas();
+			}
+		});
 		btnPontoDeVendas.setMaximumSize(new Dimension(250, 100));
 		toolbarPrincipal.add(btnPontoDeVendas);
 		btnPontoDeVendas.setIcon(getIcone("/ccomp/icons/terminal-pos.png"));
