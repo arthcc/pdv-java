@@ -6,6 +6,7 @@ import static ccomp.core.Utilitarios.*;
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
 import java.util.Collection;
+import java.util.Optional;
 
 import static ccomp.core.Utilitarios.randomInt;
 
@@ -68,19 +69,20 @@ public class GerenciadorProduto {
 		getRepositorio().criar(produto);
 		
 	}
+
+	public Optional<Produto> encontrarProdutoPorId(Long idProduto) {
+		validarNaoNulo(idProduto, "Identificador do produto");
+		return getRepositorio().encontrarPorId(idProduto);
+	}
 	
 	public void deletarProduto(Produto produto) {
-
 		validarNaoNulo(produto, "Produto");
 		getRepositorio().deletar(produto);
-	
 	}
 	
 	
 	public Collection<Produto> obterTodosProdutos() {
-		
 		return getRepositorio().todos();
-		
 	}
 	
 	public ProdutoRepositorio getRepositorio() {

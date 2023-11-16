@@ -1,9 +1,12 @@
 package ccomp.core;
 
+import java.awt.Image;
 import java.net.URL;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.Random;
+
+import javax.swing.ImageIcon;
 
 import ccomp.core.exception.ValidadorException;
 
@@ -39,6 +42,12 @@ public class Utilitarios {
 			throw new ValidadorException(
 				String.format("Erro: %s [Valor não deve ser vazio]", mensagemDeErro));
 		
+	}
+	
+	public static ImageIcon mudarScala(ImageIcon icon, int width, int height) {
+		 Image image =  icon.getImage();
+		 Image scaledImage = image.getScaledInstance(width, height, Image.SCALE_SMOOTH);
+		 return new ImageIcon(scaledImage, null);
 	}
 	
 	public static URL recursoInterno(String caminho) {
