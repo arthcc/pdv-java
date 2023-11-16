@@ -34,19 +34,21 @@ public class FrameLocalizadorProduto extends JDialog {
 
 	private final JPanel contentPanel = new JPanel();
 	private ProdutoTabelaUI tabelaDeProdutos;
-	
+
 	private final GerenciadorProduto gerenciadorProduto;
-	
+
 	{
 		gerenciadorProduto = GerenciadorSistemaFacade.getInstancia()
 				.getGerenciadorProduto();
 	}
 
-	private FrameLocalizadorProduto() {
+	private Produto produtoSelecionado;
+
+	private FrameLocalizadorProduto(boolean modoLocalizacaoApenas) {
 		setTitle("Localização de produto");
 		setBounds(100, 100, 553, 628);
 		setLocationRelativeTo(null);
-		setModal(false);
+		setModal(true);
 
 		LabeledEdit lblEdNomeProduto = new LabeledEdit();
 
@@ -71,8 +73,9 @@ public class FrameLocalizadorProduto extends JDialog {
 
 		scrollPane.setViewportView(tabelaDeProdutos);
 
-		JButton btnNewButton = new JButton("Excluir");
-		btnNewButton.addActionListener(new ActionListener() {
+		JButton btnExcluir = new JButton("Excluir");
+		btnExcluir.setEnabled(!modoLocalizacaoApenas);
+		btnExcluir.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent e) {
 
 				Long idProduto = tabelaDeProdutos.getIdProdutoSelecionado();
@@ -88,24 +91,25 @@ public class FrameLocalizadorProduto extends JDialog {
 		});
 
 		JButton btnEditar = new JButton("Editar");
+		btnEditar.setEnabled(!modoLocalizacaoApenas);
 		btnEditar.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent e) {
 
 
 				Long idProduto = tabelaDeProdutos.getIdProdutoSelecionado();
 
-				gerenciadorProduto.getRepositorio().encontrarPorId(idProduto)
+				gerenciadorProduto.encontrarProdutoPorId(idProduto)
 				.ifPresent(produtoASerEditado -> 
 				{
 					/*Cadastro de produto em modo de edição*/
 					FrameCadastroProduto frameCadastroProduto = new FrameCadastroProduto(true); 
 					frameCadastroProduto.carregarValores(produtoASerEditado);
 					frameCadastroProduto.setVisible(true);
-				
+
 					Produto produtoArbitrarioEditado = frameCadastroProduto.getProdutoRegistrado();
-					
+
 					/* substituindo os valores editados do produto */
-					
+
 					produtoASerEditado.setNome(produtoArbitrarioEditado.getNome());
 					produtoASerEditado.setPreco(produtoArbitrarioEditado.getPreco());
 					produtoASerEditado.setQuantidadeEmEstoque(produtoArbitrarioEditado.getQuantidadeEmEstoque());
@@ -114,7 +118,18 @@ public class FrameLocalizadorProduto extends JDialog {
 					JOptionPane.showMessageDialog(FrameLocalizadorProduto.this, "O produto \"" + 
 							produtoASerEditado.getNome() + "\" foi editado com sucesso." );
 				});
-				
+
+			}
+		});
+
+		JButton btnSelecionar = new JButton("Selecionar");
+		btnSelecionar.setEnabled(modoLocalizacaoApenas);
+		btnSelecionar.addActionListener(new ActionListener() {
+			public void actionPerformed(ActionEvent e) {
+				produtoSelecionado = gerenciadorProduto.encontrarProdutoPorId(
+						tabelaDeProdutos.getIdProdutoSelecionado())
+						.orElse(null);
+				dispose();
 			}
 		});
 		GroupLayout groupLayout = new GroupLayout(getContentPane());
@@ -127,10 +142,12 @@ public class FrameLocalizadorProduto extends JDialog {
 								.addComponent(lblEdNomeProduto, Alignment.LEADING, GroupLayout.DEFAULT_SIZE, 517, Short.MAX_VALUE))
 						.addGap(10))
 				.addGroup(groupLayout.createSequentialGroup()
-						.addContainerGap(395, Short.MAX_VALUE)
+						.addContainerGap()
+						.addComponent(btnSelecionar, GroupLayout.PREFERRED_SIZE, 92, GroupLayout.PREFERRED_SIZE)
+						.addPreferredGap(ComponentPlacement.RELATED, 293, Short.MAX_VALUE)
 						.addComponent(btnEditar, GroupLayout.PREFERRED_SIZE, 63, GroupLayout.PREFERRED_SIZE)
 						.addPreferredGap(ComponentPlacement.RELATED)
-						.addComponent(btnNewButton)
+						.addComponent(btnExcluir)
 						.addContainerGap())
 				);
 		groupLayout.setVerticalGroup(
@@ -142,8 +159,9 @@ public class FrameLocalizadorProduto extends JDialog {
 						.addComponent(scrollPane, GroupLayout.PREFERRED_SIZE, 486, GroupLayout.PREFERRED_SIZE)
 						.addPreferredGap(ComponentPlacement.RELATED)
 						.addGroup(groupLayout.createParallelGroup(Alignment.BASELINE)
-								.addComponent(btnNewButton)
-								.addComponent(btnEditar))
+								.addComponent(btnExcluir)
+								.addComponent(btnEditar)
+								.addComponent(btnSelecionar))
 						.addContainerGap(13, Short.MAX_VALUE))
 				);
 		getContentPane().setLayout(groupLayout);
@@ -162,10 +180,20 @@ public class FrameLocalizadorProduto extends JDialog {
 
 		});
 
-
 	}
 
+	public Produto getProdutoSelecionado() {
+		return produtoSelecionado;
+	}
+	
 	public static void executarLocalizadorDeProduto() {
-		new FrameLocalizadorProduto().setVisible(true);
+		new FrameLocalizadorProduto(false)
+			.setVisible(true);
+	}
+	
+	public static Produto localizarProduto() {
+		FrameLocalizadorProduto localizadorProduto = new FrameLocalizadorProduto(true);
+		localizadorProduto.setVisible(true);
+		return localizadorProduto.getProdutoSelecionado();
 	}
 }

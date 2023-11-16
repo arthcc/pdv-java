@@ -7,57 +7,71 @@ import ccomp.core.base.EntidadeBase;
 public class ItemVenda extends EntidadeBase {
 
 	private long idProduto;
-	private BigDecimal precoItem;
-	private int quantidadeItem;
-	private BigDecimal valorTotalItem; 
+	private BigDecimal valorUnitario; 
+	private BigDecimal valorDesconto;
+	private BigDecimal valorAcrescimo;
+	private double quantidadeTotal;
+
 	
-	public ItemVenda(long idProduto, BigDecimal precoItem, int quantidadeItem, BigDecimal valorTotalItem) {
+	public ItemVenda(long idProduto, BigDecimal valorUnitario, BigDecimal valorDesconto, 
+			BigDecimal valorAcrescimo, double quantidadeTotal) 
+	{
 		this.idProduto = idProduto;
-		this.precoItem = precoItem;
-		this.quantidadeItem = quantidadeItem;
-		this.valorTotalItem = valorTotalItem;
+		this.valorUnitario = valorUnitario;
+		this.valorDesconto = valorDesconto;
+		this.valorAcrescimo = valorAcrescimo;
+		this.quantidadeTotal = quantidadeTotal;
 	}
-
-
+	
+	public ItemVenda() {}
+	
 	public long getIdProduto() {
 		return idProduto;
 	}
-
-
+	
 	public void setIdProduto(long idProduto) {
 		this.idProduto = idProduto;
 	}
-
-
-	public BigDecimal getPrecoItem() {
-		return precoItem;
+	
+	public BigDecimal getValorUnitario() {
+		return valorUnitario;
 	}
-
-
-	public void setPrecoItem(BigDecimal precoItem) {
-		this.precoItem = precoItem;
+	
+	public void setValorUnitario(BigDecimal valorUnitario) {
+		this.valorUnitario = valorUnitario;
 	}
-
-
-	public int getQuantidadeItem() {
-		return quantidadeItem;
+	
+	public BigDecimal getValorDesconto() {
+		return valorDesconto;
 	}
-
-
-	public void setQuantidadeItem(int quantidadeItem) {
-		this.quantidadeItem = quantidadeItem;
+	
+	public void setValorDesconto(BigDecimal valorDesconto) {
+		this.valorDesconto = valorDesconto;
 	}
-
-
+	
+	public BigDecimal getValorAcrescimo() {
+		return valorAcrescimo;
+	}
+	
+	public void setValorAcrescimo(BigDecimal valorAcrescimo) {
+		this.valorAcrescimo = valorAcrescimo;
+	}
+	
+	public double getQuantidadeTotal() {
+		return quantidadeTotal;
+	}
+	
+	public void setQuantidadeTotal(double quantidadeTotal) {
+		this.quantidadeTotal = quantidadeTotal;
+	}
+	
+	/* valorUnitario * quantidadeTotal - valorDesconto + valorAcrescimo */
 	public BigDecimal getValorTotalItem() {
-		return valorTotalItem;
+		return valorUnitario
+				.multiply(BigDecimal.valueOf(quantidadeTotal))
+				.subtract(valorDesconto)
+				.add(valorAcrescimo);
 	}
-
-
-	public void setValorTotalItem(BigDecimal valorTotalItem) {
-		this.valorTotalItem = valorTotalItem;
-	}
-
 	
 	
 }
