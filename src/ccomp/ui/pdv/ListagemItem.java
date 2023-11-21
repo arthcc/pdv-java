@@ -137,7 +137,7 @@ public class ListagemItem extends JList<ItemVenda> implements ListCellRenderer<I
 	private void criarMetadataProduto(ItemVenda itemVenda) {
 		long idProduto = itemVenda.getIdProduto();
 		Produto produto = gerenciadorProduto.encontrarProdutoPorId(idProduto).get();
-		Unidade unidade = gerenciadorUnidade.encontrarUnidadePorId(idProduto);
+		Unidade unidade = gerenciadorUnidade.encontrarUnidadePorId(produto.getIdUnidade());
 
 		cacheMetadataProdutos.putIfAbsent(idProduto,
 				new String[] { produto.getNome().toUpperCase(), unidade.getNome().toUpperCase() });

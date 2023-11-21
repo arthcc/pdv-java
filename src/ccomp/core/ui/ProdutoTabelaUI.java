@@ -3,6 +3,7 @@ package ccomp.core.ui;
 import java.util.Vector;
 
 import javax.swing.JTable;
+import javax.swing.ListSelectionModel;
 import javax.swing.table.DefaultTableModel;
 
 import ccomp.core.Utilitarios;
@@ -44,6 +45,7 @@ public class ProdutoTabelaUI extends JTable {
 		setRowHeight(30);
 		setShowHorizontalLines(false);
 		setShowVerticalLines(false);
+		setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
 		setModel(tableModel);
 
 	}
@@ -58,6 +60,7 @@ public class ProdutoTabelaUI extends JTable {
 			{
 				tableModel.addRow(criarDadosProduto(produto));
 			});
+		clearSelection();
 		revalidate();
 	}
 	
@@ -85,6 +88,9 @@ public class ProdutoTabelaUI extends JTable {
 	
 	public Long getIdProdutoSelecionado() {
 		int linhaSelecionadaIndex = getSelectedRow();
+		if (linhaSelecionadaIndex == -1) {
+			return -1L;
+		}
 		Long idProduto = (Long)
 				((Vector<?>)((DefaultTableModel)tableModel)
 					.getDataVector()

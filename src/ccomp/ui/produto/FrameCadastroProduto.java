@@ -1,10 +1,18 @@
 package ccomp.ui.produto;
 
 import java.awt.FlowLayout;
+import java.awt.event.ActionEvent;
+import java.awt.event.ActionListener;
+import java.math.BigDecimal;
 
 import javax.swing.JButton;
 import javax.swing.JDialog;
+import javax.swing.JLabel;
+import javax.swing.JOptionPane;
 import javax.swing.JPanel;
+import javax.swing.JScrollPane;
+import javax.swing.JSpinner;
+import javax.swing.SpinnerNumberModel;
 import javax.swing.border.EmptyBorder;
 
 import ccomp.core.exception.ValidadorException;
@@ -16,15 +24,7 @@ import ccomp.dominios.produto.Produto;
 import ccomp.dominios.unidade.GerenciadorUnidade;
 import ccomp.dominios.unidade.Unidade;
 import ccomp.facade.GerenciadorSistemaFacade;
-
-import javax.swing.JLabel;
-import javax.swing.JOptionPane;
-import javax.swing.JSpinner;
-import javax.swing.SpinnerNumberModel;
-import java.awt.event.ActionListener;
-import java.math.BigDecimal;
-import java.awt.event.ActionEvent;
-import javax.swing.JScrollPane;
+import java.awt.Color;
 
 public class FrameCadastroProduto extends JDialog {
 
@@ -52,6 +52,7 @@ public class FrameCadastroProduto extends JDialog {
 	private JSpinner spinnerPreco;
 	
 	protected FrameCadastroProduto(boolean emModoEdicao) {
+		getContentPane().setBackground(new Color(255, 255, 255));
 
 		setResizable(false);
 		setTitle("Cadastro de produto");
@@ -61,6 +62,7 @@ public class FrameCadastroProduto extends JDialog {
 		setModal(true);
 
 		lblEdNomeProduto = new LabeledEdit();
+		lblEdNomeProduto.setOpaque(false);
 		lblEdNomeProduto.setTitulo("Nome do produto:");
 		lblEdNomeProduto.setBounds(10, 11, 436, 41);
 		getContentPane().add(lblEdNomeProduto);
@@ -97,6 +99,7 @@ public class FrameCadastroProduto extends JDialog {
 		getContentPane().add(spinnerPreco);
 
 		JButton btnCadastrar = new JButton("Cadastrar");
+		btnCadastrar.setOpaque(false);
 		btnCadastrar.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent e) {
 
@@ -132,10 +135,14 @@ public class FrameCadastroProduto extends JDialog {
 		getContentPane().add(btnCadastrar);
 		
 		JScrollPane scrollPane = new JScrollPane();
+		scrollPane.setBackground(Color.WHITE);
+		scrollPane.setOpaque(false);
 		scrollPane.setBounds(10, 164, 436, 219);
 		getContentPane().add(scrollPane);
 		
 		tabelaDeProdutos = new ProdutoTabelaUI();
+		tabelaDeProdutos.setBackground(Color.WHITE);
+		tabelaDeProdutos.setOpaque(false);
 	
 		tabelaDeProdutos.carregarProdutosDoSistema();
 		scrollPane.setViewportView(tabelaDeProdutos);

@@ -1,19 +1,19 @@
 package ccomp.ui.pdv;
 
 import java.awt.BorderLayout;
+import java.awt.Color;
 import java.awt.FlowLayout;
+import java.awt.Font;
+import java.awt.event.ActionEvent;
+import java.awt.event.ActionListener;
 
 import javax.swing.JButton;
 import javax.swing.JDialog;
+import javax.swing.JEditorPane;
 import javax.swing.JPanel;
 import javax.swing.border.EmptyBorder;
-import javax.swing.border.TitledBorder;
 import javax.swing.border.EtchedBorder;
-import java.awt.Color;
-import javax.swing.JEditorPane;
-import java.awt.Font;
-import java.awt.event.ActionListener;
-import java.awt.event.ActionEvent;
+import javax.swing.border.TitledBorder;
 
 public class FrameConfiguracao extends JDialog {
 
@@ -21,7 +21,7 @@ public class FrameConfiguracao extends JDialog {
 	private final JPanel contentPanel = new JPanel();
 
 	
-	public FrameConfiguracao(final FramePontoDeVendas donoPontoDeVendas) {
+	private FrameConfiguracao(final FramePontoDeVendas donoPontoDeVendas) {
 		
 		setBounds(100, 100, 264, 300);
 		getContentPane().setLayout(new BorderLayout());
@@ -64,5 +64,11 @@ public class FrameConfiguracao extends JDialog {
 				getRootPane().setDefaultButton(okButton);
 			}
 		}
+	}
+	
+	public static FrameConfiguracao iniciarConfiguradorPDV(FramePontoDeVendas hospedeiro) {
+		FrameConfiguracao configuracao = new FrameConfiguracao(hospedeiro);
+		configuracao.setVisible(true);
+		return configuracao;
 	}
 }

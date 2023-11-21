@@ -2,14 +2,6 @@ package ccomp.ui.pdv;
 
 import java.awt.Color;
 import java.awt.Component;
-import java.awt.Dimension;
-import java.awt.event.FocusEvent;
-import java.awt.event.FocusListener;
-import java.util.Arrays;
-import java.util.Enumeration;
-import java.util.HashMap;
-import java.util.Map;
-import java.util.function.Consumer;
 
 import javax.swing.DefaultListModel;
 import javax.swing.JLabel;
@@ -18,13 +10,6 @@ import javax.swing.ListCellRenderer;
 import javax.swing.SwingConstants;
 import javax.swing.event.ListSelectionEvent;
 import javax.swing.event.ListSelectionListener;
-
-import ccomp.dominios.produto.GerenciadorProduto;
-import ccomp.dominios.produto.Produto;
-import ccomp.dominios.unidade.GerenciadorUnidade;
-import ccomp.dominios.unidade.Unidade;
-import ccomp.dominios.venda.ItemVenda;
-import ccomp.facade.GerenciadorSistemaFacade;
 
 public class ListagemPersonalizacao extends JList<Paleta> implements ListCellRenderer<Paleta> {
 
@@ -35,8 +20,8 @@ public class ListagemPersonalizacao extends JList<Paleta> implements ListCellRen
 	
 	public static final Paleta SKIN_PADRAO = new Paleta(
 			"Eclipse", 
-			Color.decode("#a855f7"),  /* cor topo frame */
-			Color.decode("#818cf8"),  /* cor chao frame */
+			Color.decode("#3b2e72"),  /* cor topo frame */
+			Color.decode("#3b2e72"),  /* cor chao frame */
 			new Color(255, 102, 102), /* cor valor desconto */ 
 			new Color(102, 204, 0));  /* cor valor acrescimo */
 	

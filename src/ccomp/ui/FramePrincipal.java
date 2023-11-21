@@ -1,39 +1,37 @@
 package ccomp.ui;
 
 
-import javax.swing.JFrame;
-import javax.swing.JPanel;
-import javax.swing.border.EmptyBorder;
-import javax.swing.JButton;
-import javax.swing.JToolBar;
-import javax.swing.SwingConstants;
-import javax.swing.border.LineBorder;
-
-import ccomp.dominios.produto.Produto;
-import ccomp.dominios.unidade.Unidade;
-import ccomp.ui.produto.FrameCadastroProduto;
-import ccomp.ui.produto.FrameLocalizadorProduto;
-import ccomp.ui.unidade.FrameCadastroUnidade;
-import ccomp.ui.pagamento.FrameCadastroPagamento;
-import ccomp.ui.pdv.FramePontoDeVendas;
-
-import javax.swing.border.CompoundBorder;
-import javax.swing.JSeparator;
+import static ccomp.core.Icones.getIcone;
 
 import java.awt.Color;
 import java.awt.Component;
 import java.awt.Dimension;
+import java.awt.event.ActionEvent;
+import java.awt.event.ActionListener;
 
 import javax.swing.Box;
-import javax.swing.GroupLayout;
-import javax.swing.GroupLayout.Alignment;
-import javax.swing.LayoutStyle.ComponentPlacement;
-import javax.swing.JLabel;
+import javax.swing.JButton;
+import javax.swing.JFrame;
 import javax.swing.JOptionPane;
+import javax.swing.JPanel;
+import javax.swing.JSeparator;
+import javax.swing.JToolBar;
+import javax.swing.JTree;
+import javax.swing.SwingConstants;
+import javax.swing.border.CompoundBorder;
+import javax.swing.border.EmptyBorder;
+import javax.swing.border.LineBorder;
+import javax.swing.tree.DefaultMutableTreeNode;
+import javax.swing.tree.TreePath;
 
-import static ccomp.core.Icones.*;
-import java.awt.event.ActionListener;
-import java.awt.event.ActionEvent;
+import ccomp.dominios.produto.Produto;
+import ccomp.dominios.unidade.Unidade;
+import ccomp.ui.pagamento.FrameCadastroPagamento;
+import ccomp.ui.pdv.FrameHistoricoDeVendas;
+import ccomp.ui.pdv.FramePontoDeVendas;
+import ccomp.ui.produto.FrameCadastroProduto;
+import ccomp.ui.produto.FrameLocalizadorProduto;
+import ccomp.ui.unidade.FrameCadastroUnidade;
 
 public class FramePrincipal extends JFrame {
 
@@ -41,11 +39,13 @@ public class FramePrincipal extends JFrame {
 	private JPanel contentPane;
 
 	public FramePrincipal() {
+		setResizable(false);
 		
 		setTitle("CCOMP Market 2023");
 		setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
-		setBounds(100, 100, 676, 719);
+		setBounds(100, 100, 676, 800);
 		contentPane = new JPanel();
+		contentPane.setBackground(new Color(255, 255, 255));
 		contentPane.setBorder(new EmptyBorder(5, 5, 5, 5));
 		setLocationRelativeTo(null);
 		setMinimumSize(getSize());
@@ -53,10 +53,13 @@ public class FramePrincipal extends JFrame {
 		setContentPane(contentPane);
 		
 		JToolBar toolbarMaster = new JToolBar();
+		toolbarMaster.setBounds(20, 10, 629, 213);
+		toolbarMaster.setOpaque(false);
 		toolbarMaster.setBorder(new EmptyBorder(10, 10, 10, 10));
 		toolbarMaster.setFloatable(false);
 		
 		JToolBar toolbarPrincipal = new JToolBar();
+		toolbarPrincipal.setOpaque(false);
 		toolbarPrincipal.setOrientation(SwingConstants.VERTICAL);
 		toolbarPrincipal.setMaximumSize(new Dimension(200, 200));
 		toolbarPrincipal.setFloatable(false);
@@ -65,6 +68,7 @@ public class FramePrincipal extends JFrame {
 		
 		
 		JButton btnPontoDeVendas = new JButton("PONTO DE VENDAS");
+		btnPontoDeVendas.setOpaque(false);
 		btnPontoDeVendas.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent e) {
 				FramePontoDeVendas.criarPontoDeVendas();
@@ -75,19 +79,31 @@ public class FramePrincipal extends JFrame {
 		btnPontoDeVendas.setIcon(getIcone("/ccomp/icons/terminal-pos.png"));
 		estilizarJButton(btnPontoDeVendas, true);
 		
-		JLabel lblTitle = new JLabel("MARKET - CCOMP");
-		lblTitle.setMaximumSize(new Dimension(250, 100));
-		lblTitle.setVerticalTextPosition(SwingConstants.BOTTOM);
-		lblTitle.setHorizontalTextPosition(SwingConstants.CENTER);
-		lblTitle.setHorizontalAlignment(SwingConstants.CENTER);
-		lblTitle.setIcon(getIcone("/ccomp/icons/celular.png"));
-		toolbarPrincipal.add(lblTitle);
+		Component verticalStrut_3 = Box.createVerticalStrut(2);
+		toolbarPrincipal.add(verticalStrut_3);
+		
+		JButton btnHistoricoDeVendas = new JButton("HISTORICO DE VENDAS");
+		btnHistoricoDeVendas.addActionListener(new ActionListener() {
+			public void actionPerformed(ActionEvent e) {
+				FrameHistoricoDeVendas.criarHistoricoDeVendas();
+			}
+		});
+		btnHistoricoDeVendas.setIcon(getIcone("/ccomp/icons/terminal-pos.png"));
+		btnHistoricoDeVendas.setOpaque(false);
+		btnHistoricoDeVendas.setMaximumSize(new Dimension(250, 100));
+		btnHistoricoDeVendas.setFocusPainted(false);
+		btnHistoricoDeVendas.setBorder(new CompoundBorder(new LineBorder(new Color(200,200,200), 1, true), new EmptyBorder(15, 10, 15, 10)));
+		toolbarPrincipal.add(btnHistoricoDeVendas);
+		
+		Component verticalStrut_2 = Box.createVerticalStrut(50);
+		toolbarPrincipal.add(verticalStrut_2);
 		
 		
 		Component horizontalStrut = Box.createHorizontalStrut(2);
 		toolbarMaster.add(horizontalStrut);
 		
 		JToolBar toolbarProdutos = new JToolBar();
+		toolbarProdutos.setOpaque(false);
 		toolbarProdutos.setMaximumSize(new Dimension(200, 200));
 		toolbarMaster.add(toolbarProdutos);
 		toolbarProdutos.setOrientation(SwingConstants.VERTICAL);
@@ -95,8 +111,8 @@ public class FramePrincipal extends JFrame {
 		toolbarProdutos.setBorder(new EmptyBorder(10, 10, 10, 10));
 		
 		
-		
 		JButton btnCadastroDeProduto = new JButton("CADASTRO DE PRODUTO");
+		btnCadastroDeProduto.setOpaque(false);
 
 		btnCadastroDeProduto.setMaximumSize(new Dimension(250, 100));
 		toolbarProdutos.add(btnCadastroDeProduto);
@@ -116,6 +132,7 @@ public class FramePrincipal extends JFrame {
 		estilizarJButton(btnCadastroDeProduto, true);
 		
 		JButton btnLocalizarProduto = new JButton("LOCALIZAR PRODUTO");
+		btnLocalizarProduto.setOpaque(false);
 		btnLocalizarProduto.setMaximumSize(new Dimension(250, 50));
 		btnLocalizarProduto.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent e) {
@@ -133,6 +150,7 @@ public class FramePrincipal extends JFrame {
 		toolbarMaster.add(horizontalStrut_1);
 		
 		JToolBar toolbarOutros = new JToolBar();
+		toolbarOutros.setOpaque(false);
 		toolbarOutros.setMaximumSize(new Dimension(220, 200));
 		toolbarOutros.setOrientation(SwingConstants.VERTICAL);
 		toolbarOutros.setFloatable(false);
@@ -140,6 +158,7 @@ public class FramePrincipal extends JFrame {
 		toolbarMaster.add(toolbarOutros);
 		
 		JButton btnFormasDePagamento = new JButton("FORMAS DE PAGAMENTO");
+		btnFormasDePagamento.setOpaque(false);
 		btnFormasDePagamento.addActionListener(new ActionListener() {
 			
 			@Override
@@ -157,6 +176,7 @@ public class FramePrincipal extends JFrame {
 		toolbarOutros.add(verticalStrut_1);
 		
 		JButton btnCadastroDeUnidade = new JButton("CADASTRO DE UNIDADES");
+		btnCadastroDeUnidade.setOpaque(false);
 		btnCadastroDeUnidade.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent e) {
 				Unidade unidade = FrameCadastroUnidade.executarCadastroUnidade();
@@ -175,26 +195,43 @@ public class FramePrincipal extends JFrame {
 		estilizarJButton(btnCadastroDeUnidade, false);
 		
 		JSeparator separator = new JSeparator();
-		GroupLayout gl_contentPane = new GroupLayout(contentPane);
-		gl_contentPane.setHorizontalGroup(
-			gl_contentPane.createParallelGroup(Alignment.LEADING)
-				.addGroup(gl_contentPane.createSequentialGroup()
-					.addGap(10)
-					.addGroup(gl_contentPane.createParallelGroup(Alignment.LEADING)
-						.addComponent(toolbarMaster, Alignment.TRAILING, GroupLayout.DEFAULT_SIZE, 629, Short.MAX_VALUE)
-						.addComponent(separator, Alignment.TRAILING, GroupLayout.PREFERRED_SIZE, 0, Short.MAX_VALUE))
-					.addGap(11))
-		);
-		gl_contentPane.setVerticalGroup(
-			gl_contentPane.createParallelGroup(Alignment.LEADING)
-				.addGroup(gl_contentPane.createSequentialGroup()
-					.addComponent(toolbarMaster, GroupLayout.PREFERRED_SIZE, 208, GroupLayout.PREFERRED_SIZE)
-					.addPreferredGap(ComponentPlacement.RELATED)
-					.addComponent(separator, GroupLayout.PREFERRED_SIZE, 26, GroupLayout.PREFERRED_SIZE)
-					.addContainerGap(430, Short.MAX_VALUE))
-		);
-		contentPane.setLayout(gl_contentPane);
+		separator.setBounds(647, 823, 2, 26);
+		
+		JTree tree = new JTree();
+		tree.setShowsRootHandles(true);
+		Guia.carregarGuiaEmArvore(tree);
+		tree.setBounds(20, 229, 630, 521);
+		
+		expandAllNodes(tree, true);
+		contentPane.setLayout(null);
+		contentPane.add(toolbarMaster);
+		contentPane.add(separator);
+		contentPane.add(tree);
+	
 	}
+	
+	
+    private static void expandAllNodes(JTree tree, boolean expand) {
+        DefaultMutableTreeNode root = (DefaultMutableTreeNode) tree.getModel().getRoot();
+        expandAll(tree, new TreePath(root), expand);
+    }
+
+    private static void expandAll(JTree tree, TreePath parent, boolean expand) {
+        DefaultMutableTreeNode node = (DefaultMutableTreeNode) parent.getLastPathComponent();
+        if (node.getChildCount() >= 0) {
+            for (int i = 0; i < node.getChildCount(); i++) {
+                TreePath path = parent.pathByAddingChild(node.getChildAt(i));
+                expandAll(tree, path, expand);
+            }
+        }
+
+        // Expansion or collapse
+        if (expand) {
+            tree.expandPath(parent);
+        } else {
+            tree.collapsePath(parent);
+        }
+    }
 	
 	private void estilizarJButton(JButton btn, boolean top) {
 		if (top) {

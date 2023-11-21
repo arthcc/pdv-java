@@ -4,11 +4,10 @@ package ccomp.dominios.formaPagamento;
 import java.util.Optional;
 
 import ccomp.core.impl.EmMemoriaRepositorio;
-import ccomp.dominios.pagamento.Pagamento;
 
-public class PagamentoRepositorio extends EmMemoriaRepositorio<Pagamento> {
+public class PagamentoRepositorio extends EmMemoriaRepositorio<TipoPagamento> {
 	
-	public Optional<Pagamento> encontrarPorNome(String nome) {
+	public Optional<TipoPagamento> encontrarPorNome(String nome) {
 		return todos()
 				.stream()
 				.filter(pagamento-> pagamento.getNome()

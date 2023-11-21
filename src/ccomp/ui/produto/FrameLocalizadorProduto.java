@@ -1,10 +1,21 @@
 package ccomp.ui.produto;
 
 import java.awt.FlowLayout;
+import java.awt.event.ActionEvent;
+import java.awt.event.ActionListener;
+import java.awt.event.KeyAdapter;
+import java.awt.event.KeyEvent;
+import java.awt.event.WindowAdapter;
+import java.awt.event.WindowEvent;
 
+import javax.swing.GroupLayout;
+import javax.swing.GroupLayout.Alignment;
+import javax.swing.JButton;
 import javax.swing.JDialog;
 import javax.swing.JOptionPane;
 import javax.swing.JPanel;
+import javax.swing.JScrollPane;
+import javax.swing.LayoutStyle.ComponentPlacement;
 import javax.swing.border.EmptyBorder;
 
 import ccomp.core.Utilitarios;
@@ -13,19 +24,7 @@ import ccomp.core.ui.ProdutoTabelaUI;
 import ccomp.dominios.produto.GerenciadorProduto;
 import ccomp.dominios.produto.Produto;
 import ccomp.facade.GerenciadorSistemaFacade;
-
-import javax.swing.JScrollPane;
-import javax.swing.GroupLayout;
-import javax.swing.GroupLayout.Alignment;
-import java.awt.event.KeyAdapter;
-import java.awt.event.KeyEvent;
-import java.awt.event.WindowAdapter;
-import java.awt.event.WindowEvent;
-
-import javax.swing.JButton;
-import javax.swing.LayoutStyle.ComponentPlacement;
-import java.awt.event.ActionListener;
-import java.awt.event.ActionEvent;
+import java.awt.Color;
 
 public class FrameLocalizadorProduto extends JDialog {
 
@@ -45,12 +44,14 @@ public class FrameLocalizadorProduto extends JDialog {
 	private Produto produtoSelecionado;
 
 	private FrameLocalizadorProduto(boolean modoLocalizacaoApenas) {
+		getContentPane().setBackground(new Color(255, 255, 255));
 		setTitle("Localização de produto");
 		setBounds(100, 100, 553, 628);
 		setLocationRelativeTo(null);
 		setModal(true);
 
 		LabeledEdit lblEdNomeProduto = new LabeledEdit();
+		lblEdNomeProduto.setOpaque(false);
 
 		lblEdNomeProduto.getCampoValor().addKeyListener(new KeyAdapter() {
 			@Override
@@ -68,29 +69,40 @@ public class FrameLocalizadorProduto extends JDialog {
 		lblEdNomeProduto.setTitulo("Trecho do nome do produto:");
 
 		JScrollPane scrollPane = new JScrollPane();
+		scrollPane.setBorder(null);
+		scrollPane.setBackground(Color.WHITE);
 
 		tabelaDeProdutos = new ProdutoTabelaUI();
+		tabelaDeProdutos.setBackground(Color.WHITE);
 
 		scrollPane.setViewportView(tabelaDeProdutos);
 
 		JButton btnExcluir = new JButton("Excluir");
+		btnExcluir.setOpaque(false);
 		btnExcluir.setEnabled(!modoLocalizacaoApenas);
 		btnExcluir.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent e) {
 
+
 				Long idProduto = tabelaDeProdutos.getIdProdutoSelecionado();
 
 				gerenciadorProduto.getRepositorio().encontrarPorId(idProduto)
-				.ifPresent(produto -> gerenciadorProduto
-						.deletarProduto(produto));
+				.ifPresent(produto -> 
+				{
+					if (produto.getDataUltimaVenda() == null) {
+						gerenciadorProduto.deletarProduto(produto);
+					} else {
+						JOptionPane.showMessageDialog(null, "Não é possível excluir produtos utilizado em venda!!!");
+					}
+				});
 
 				lblEdNomeProduto.getCampoValor().setText("");
 				tabelaDeProdutos.carregarProdutosDoSistema();
-
 			}
 		});
 
 		JButton btnEditar = new JButton("Editar");
+		btnEditar.setOpaque(false);
 		btnEditar.setEnabled(!modoLocalizacaoApenas);
 		btnEditar.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent e) {
@@ -107,6 +119,8 @@ public class FrameLocalizadorProduto extends JDialog {
 					frameCadastroProduto.setVisible(true);
 
 					Produto produtoArbitrarioEditado = frameCadastroProduto.getProdutoRegistrado();
+					if (produtoArbitrarioEditado == null)
+						return;
 
 					/* substituindo os valores editados do produto */
 
@@ -123,6 +137,7 @@ public class FrameLocalizadorProduto extends JDialog {
 		});
 
 		JButton btnSelecionar = new JButton("Selecionar");
+		btnSelecionar.setOpaque(false);
 		btnSelecionar.setEnabled(modoLocalizacaoApenas);
 		btnSelecionar.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent e) {
@@ -130,6 +145,16 @@ public class FrameLocalizadorProduto extends JDialog {
 						tabelaDeProdutos.getIdProdutoSelecionado())
 						.orElse(null);
 				dispose();
+			}
+		});
+
+		JButton btnCarregarTodos = new JButton("Carregar todos");
+		btnCarregarTodos.setOpaque(false);
+		btnCarregarTodos.addActionListener(new ActionListener() {
+
+			@Override
+			public void actionPerformed(ActionEvent e) {
+				tabelaDeProdutos.carregarProdutosDoSistema();
 			}
 		});
 		GroupLayout groupLayout = new GroupLayout(getContentPane());
@@ -144,7 +169,9 @@ public class FrameLocalizadorProduto extends JDialog {
 				.addGroup(groupLayout.createSequentialGroup()
 						.addContainerGap()
 						.addComponent(btnSelecionar, GroupLayout.PREFERRED_SIZE, 92, GroupLayout.PREFERRED_SIZE)
-						.addPreferredGap(ComponentPlacement.RELATED, 293, Short.MAX_VALUE)
+						.addPreferredGap(ComponentPlacement.RELATED)
+						.addComponent(btnCarregarTodos, GroupLayout.PREFERRED_SIZE, 119, GroupLayout.PREFERRED_SIZE)
+						.addPreferredGap(ComponentPlacement.RELATED, 168, Short.MAX_VALUE)
 						.addComponent(btnEditar, GroupLayout.PREFERRED_SIZE, 63, GroupLayout.PREFERRED_SIZE)
 						.addPreferredGap(ComponentPlacement.RELATED)
 						.addComponent(btnExcluir)
@@ -161,7 +188,8 @@ public class FrameLocalizadorProduto extends JDialog {
 						.addGroup(groupLayout.createParallelGroup(Alignment.BASELINE)
 								.addComponent(btnExcluir)
 								.addComponent(btnEditar)
-								.addComponent(btnSelecionar))
+								.addComponent(btnSelecionar)
+								.addComponent(btnCarregarTodos))
 						.addContainerGap(13, Short.MAX_VALUE))
 				);
 		getContentPane().setLayout(groupLayout);
@@ -174,23 +202,24 @@ public class FrameLocalizadorProduto extends JDialog {
 
 			@Override
 			public void windowClosing(WindowEvent e) {
-				System.out.println("Fechando");
 				tabelaDeProdutos.limparTabela();
 			}
 
 		});
-
+		
+		JOptionPane.showMessageDialog(null, "Utilize a expressão \"%\" + ESPAÇO para carregar todos os dados do localizador.");
+		
 	}
 
 	public Produto getProdutoSelecionado() {
 		return produtoSelecionado;
 	}
-	
+
 	public static void executarLocalizadorDeProduto() {
 		new FrameLocalizadorProduto(false)
-			.setVisible(true);
+		.setVisible(true);
 	}
-	
+
 	public static Produto localizarProduto() {
 		FrameLocalizadorProduto localizadorProduto = new FrameLocalizadorProduto(true);
 		localizadorProduto.setVisible(true);

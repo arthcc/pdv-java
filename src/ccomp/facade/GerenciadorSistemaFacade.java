@@ -17,12 +17,10 @@ public class GerenciadorSistemaFacade {
 	private GerenciadorUnidade gerenciadorUnidade;
 	
 	public static void criarGerenciadorSistema() throws InstanceAlreadyExistsException {
-		
-		if (sistemaInstancia != null)
+		if (sistemaInstancia != null) {
 			throw new InstanceAlreadyExistsException();
-		
+		}
 		new GerenciadorSistemaFacade();
-
 	}
 	
 	private GerenciadorSistemaFacade() {
@@ -32,12 +30,10 @@ public class GerenciadorSistemaFacade {
 	
 	
 	private void criarTodosGerenciadores() {
-		
+		gerenciadorUnidade = new GerenciadorUnidade();
 		gerenciadorProduto = new GerenciadorProduto();
 		gerenciadorVenda = new GerenciadorVenda();
 		gerenciadorTipoPagamento = new GerenciadorTipoPagamento();
-		gerenciadorUnidade = new GerenciadorUnidade();
-		
 	}
 	
 	public GerenciadorVenda getGerenciadorVenda() {

@@ -1,14 +1,10 @@
 package ccomp.ui.pdv;
 
-
-
 import java.awt.BorderLayout;
 import java.awt.ComponentOrientation;
 import java.awt.Dimension;
 import java.awt.FlowLayout;
 import java.awt.Font;
-import java.math.BigDecimal;
-import java.util.ArrayList;
 import java.util.List;
 
 import javax.swing.JDialog;
@@ -18,26 +14,27 @@ import javax.swing.JTextArea;
 import javax.swing.ScrollPaneConstants;
 import javax.swing.border.EmptyBorder;
 
+import ccomp.core.Utilitarios;
+import ccomp.dominios.produto.GerenciadorProduto;
+import ccomp.dominios.produto.Produto;
 import ccomp.dominios.venda.ItemVenda;
+import ccomp.dominios.venda.Venda;
 
 public class FrameImpressaoVenda extends JDialog {
 
 	private static final long serialVersionUID = 800968112957234975L;
 	private final JPanel contentPanel = new JPanel();
 
-	private ListagemItem listagemItem;
-	
-	public FrameImpressaoVenda( ListagemItem listagemItem ) {
-		
-		this.listagemItem = listagemItem;
-		
+	public FrameImpressaoVenda(Venda venda, GerenciadorProduto gerenciadorProduto) {
 		setTitle("Registro de venda");
 		setType(Type.UTILITY);
-		setResizable(false);
 		setDefaultCloseOperation(DISPOSE_ON_CLOSE);
+
+		setModal(true);
+		setMinimumSize(new Dimension(400, 700));
+		setBounds(100, 100, 400, 700);
+
 		setLocationRelativeTo(null);
-		setMinimumSize(new Dimension(345, 447));
-		setBounds(100, 100, 353, 499);
 		getContentPane().setLayout(new BorderLayout(0, 0));
 
 		JScrollPane scrollPane = new JScrollPane();
@@ -49,49 +46,74 @@ public class FrameImpressaoVenda extends JDialog {
 		textArea.setEditable(false);
 		textArea.setComponentOrientation(ComponentOrientation.LEFT_TO_RIGHT);
 		scrollPane.setViewportView(textArea);
-		textArea.setText(construirDocumentoNaoFiscal());
-		textArea.setFont(new Font("Monospaced", Font.PLAIN, 12));
-		setModal(false);
+
+
+		StringBuilder builder = new StringBuilder();
+		List<ItemVenda> totalizadorItens = venda.getItens();
+
+
+		String format = "%1$-15s %2$-11s %3$-11s %3$-9s\n";
+
+		builder.append("\n\n\n");
+		builder.append(centerStr("UNIFESO", 50) + "\n");
+		builder.append(centerStr("Campus Quinta do Paraíso", 50) + "\n");
+		builder.append(centerStr("Estr. Venceslau José de Medeiros, 1045 - Prata", 50) + "\n");
+		builder.append(centerStr("Teresópolis - RJ, 25976-345", 50) + "\n\n\n");
+
+		builder.append(centerStr("ITENS", 50) + "\n\n");
+		builder.append(String.format(format, "Produto", "Qt.", "Vl.Unitário", "Vl.Total"));
+		totalizadorItens.forEach(e -> 
+		{
+			Produto produto = gerenciadorProduto.encontrarProdutoPorId(e.getIdProduto()).get();
+			builder.append(String.format(format, 
+					substringComLimite(produto.getNome(), 20), 
+					formatarValor(e.getQuantidadeTotal()) + " x ", 
+					"R$ " + formatarValor(e.getValorUnitario().doubleValue()), 
+					"R$ " + formatarValor(e.getValorTotalItem().doubleValue())));
+		});
+		builder.append("\n\nForma de pagamento: " + venda.getPagamento().getNome());
+		builder.append("\nData da venda: " + Utilitarios.dateToString(venda.getDataTempoVenda()));
+		builder.append("\nEste não é um documento fiscal!");
+		
+		
+		textArea.setText(builder.toString());	
+		textArea.setFont(new Font("Courier New", Font.PLAIN, 12));
 		contentPanel.setLayout(new FlowLayout());
 		contentPanel.setBorder(new EmptyBorder(5, 5, 5, 5));
 		setVisible(true);
 	}
 
+	private static String centerStr(String input, int length) {
+		if (input.length() >= length) {
+			return input;
+		} else {
+			int padding = length - input.length();
+			int leftPadding = padding / 2;
+			int rightPadding = padding - leftPadding;
 
-	private String construirDocumentoNaoFiscal() {
-		StringBuffer buffer = new StringBuffer();
-		buffer.append(String.format("+-----------------+-----------------------+%n"));
-		buffer.append(String.format("| Registro de venda                       |%n"));
-		buffer.append(String.format("+-----------------+-----------------------+%n"));
-		buffer.append(String.format("+-----------------+--------------+--------+%n"));
-		buffer.append(String.format("| Nome            | Valor        | Qtde   |%n"));
-		buffer.append(String.format("+---------------------+----------+--------+%n"));
+			StringBuilder centeredString = new StringBuilder();
+			for (int i = 0; i < leftPadding; i++) {
+				centeredString.append(" ");
+			}
+			centeredString.append(input);
+			for (int i = 0; i < rightPadding; i++) {
+				centeredString.append(" ");
+			}
 
-		List<ItemVenda> totalizadorItens = new ArrayList<ItemVenda>();
-		listagemItem.consumirItensDaListagem(totalizadorItens::add);
-		
-		totalizadorItens.forEach(itemVenda -> 
-		{
-			buffer.append(String.format("| %-15s | %-12s | %-6s |%n", 
-					listagemItem.getCacheMetadataProdutos().get(itemVenda.getIdProduto())[0],
-					itemVenda.getValorUnitario(), 
-					itemVenda.getQuantidadeTotal()));
-		});
-		
-		
-		listagemItem.consumirItensDaListagem(itemVenda -> 
-		{
-			
-		});
-		
-		buffer.append(String.format("+-----------------+--------------+--------+%n"));
-		buffer.append(String.format("| Preço total: %-26s |%n",
-				totalizadorItens.stream()
-				.map(ItemVenda::getValorTotalItem)
-				.reduce(BigDecimal.ZERO, BigDecimal::add).doubleValue())
-				);
-		buffer.append(String.format("+-----------------------------------------+%n"));
-		return buffer.toString();
+			return centeredString.toString();
+		}
+	}
+
+	private static String formatarValor(double valor) {
+		return String.format("%.2f", valor);
+	}
+
+	private static String substringComLimite(String str, int limite) {
+		if (str.length() > limite) {
+			return str.substring(0, limite);
+		} else {
+			return str;
+		}
 	}
 
 }

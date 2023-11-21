@@ -1,11 +1,14 @@
 package ccomp.ui.unidade;
 
 import java.awt.FlowLayout;
+import java.awt.event.ActionEvent;
+import java.awt.event.ActionListener;
 
 import javax.swing.JButton;
 import javax.swing.JDialog;
 import javax.swing.JOptionPane;
 import javax.swing.JPanel;
+import javax.swing.JScrollPane;
 import javax.swing.border.EmptyBorder;
 
 import ccomp.core.exception.ValidadorException;
@@ -14,10 +17,6 @@ import ccomp.core.ui.UnidadeTabelaUI;
 import ccomp.dominios.unidade.GerenciadorUnidade;
 import ccomp.dominios.unidade.Unidade;
 import ccomp.facade.GerenciadorSistemaFacade;
-
-import java.awt.event.ActionListener;
-import java.awt.event.ActionEvent;
-import javax.swing.JScrollPane;
 
 public class FrameCadastroUnidade extends JDialog {
 
@@ -83,6 +82,61 @@ public class FrameCadastroUnidade extends JDialog {
 		});
 		btnCadastrar.setBounds(314, 63, 132, 23);
 		getContentPane().add(btnCadastrar);
+		
+		JButton btnExcluir = new JButton("Excluir");
+		btnExcluir.addActionListener(new ActionListener() {
+			public void actionPerformed(ActionEvent e) {
+				long idUnidade = tabelaDeUnidades.getIdUnidadeSelecionado();
+				if (idUnidade == -1L) {
+					JOptionPane.showMessageDialog(null, "Selecione uma unidade antes.", 
+							"Erro ao excluir", JOptionPane.WARNING_MESSAGE);
+					return;
+				}
+				gerenciadorUnidade.deletarUnidadePorId(idUnidade);
+				JOptionPane.showMessageDialog(null, "Unidade excluida.", 
+						"Sucesso", JOptionPane.INFORMATION_MESSAGE);
+
+				tabelaDeUnidades.carregarUnidadesDoSistema();
+			}
+		});
+		btnExcluir.setBounds(10, 63, 63, 23);
+		getContentPane().add(btnExcluir);
+		
+		JButton btnAlterar = new JButton("Alterar");
+		btnAlterar.addActionListener(new ActionListener() {
+			public void actionPerformed(ActionEvent e) {
+				long idUnidade = tabelaDeUnidades.getIdUnidadeSelecionado();
+				if (idUnidade == -1L) {
+					JOptionPane.showMessageDialog(null, "Selecione uma unidade antes.", 
+							"Erro ao alterar", JOptionPane.WARNING_MESSAGE);
+					return;
+				}
+				try {
+					
+					Unidade unidade = gerenciadorUnidade.encontrarUnidadePorId(idUnidade);
+
+					String novoNomeUnidade = JOptionPane.showInputDialog(null, "<html><center>Só é possível alterar o "
+							+ "nome da unidade<br>Informe o <b>novo</b> nome:</center></html>", unidade.getNome());
+
+					if (gerenciadorUnidade.encontrarUnidadePorNome(novoNomeUnidade) != null)
+						throw new ValidadorException("Esse nome já foi usado anteriormente.");
+
+					unidade.setNome(novoNomeUnidade);
+					
+					JOptionPane.showMessageDialog(null, "Unidade alterada.", 
+							"Sucesso", JOptionPane.INFORMATION_MESSAGE);
+				}
+				catch (ValidadorException validadorException) 
+				{
+					JOptionPane.showMessageDialog(null, "Favor verifique: " +
+							validadorException.getMessage(), "Erro ao gravar", JOptionPane.ERROR_MESSAGE);
+				}
+
+				tabelaDeUnidades.carregarUnidadesDoSistema();
+			}
+		});
+		btnAlterar.setBounds(83, 63, 119, 23);
+		getContentPane().add(btnAlterar);
 		
 		contentPanel.setLayout(new FlowLayout());
 		contentPanel.setBorder(new EmptyBorder(5, 5, 5, 5));

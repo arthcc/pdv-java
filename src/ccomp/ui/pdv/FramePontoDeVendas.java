@@ -17,8 +17,10 @@ import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
 import java.math.BigDecimal;
 import java.text.DecimalFormat;
+import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Optional;
 import java.util.function.Consumer;
 
 import javax.swing.Box;
@@ -48,9 +50,11 @@ import javax.swing.text.NumberFormatter;
 import ccomp.core.Icones;
 import ccomp.core.Utilitarios;
 import ccomp.dominios.formaPagamento.GerenciadorTipoPagamento;
+import ccomp.dominios.formaPagamento.TipoPagamento;
 import ccomp.dominios.produto.GerenciadorProduto;
 import ccomp.dominios.produto.Produto;
 import ccomp.dominios.venda.ItemVenda;
+import ccomp.dominios.venda.Venda;
 import ccomp.facade.GerenciadorSistemaFacade;
 import ccomp.ui.produto.FrameLocalizadorProduto;
 
@@ -66,33 +70,21 @@ public class FramePontoDeVendas extends JFrame implements ActionListener {
 	public static final String CMD_LIMPAR_ITENS = "limpar-itens";
 	public static final String CMD_FINALIZAR_VENDA = "finalizar-venda";
 	public static final String CMD_CONFIG = "config";
-	
+
 	public static final KeyStroke VK_DELETE = KeyStroke.getKeyStroke(
 			KeyEvent.VK_DELETE, 
 			KeyEvent.VK_UNDEFINED);
-	
+
+	private final GerenciadorTipoPagamento gerenciadorTipoPagamento;
 	private final GerenciadorProduto gerenciadorProduto;
+
 	{
 		gerenciadorProduto = GerenciadorSistemaFacade.getInstancia()
 				.getGerenciadorProduto();
+
+		gerenciadorTipoPagamento = GerenciadorSistemaFacade.getInstancia()
+				.getGerenciadorTipoPagamento();
 	}
-
-
-	/*
-	 * APENAS PARA TESTE RAPIDO
-	 * public static void main(String[] args) {
-
-		try {
-			GerenciadorSistemaFacade.criarGerenciadorSistema();
-			UIManager.setLookAndFeel(UIManager.getSystemLookAndFeelClassName());
-		} catch (ClassNotFoundException | InstantiationException | IllegalAccessException
-				| UnsupportedLookAndFeelException | InstanceAlreadyExistsException e) {
-			e.printStackTrace();
-		}
-		FramePontoDeVendas pontoDeVendas = new FramePontoDeVendas();
-		pontoDeVendas.setVisible(true);
-
-	}*/
 
 	private final CustomGradientPanel contentPanel;
 	private JFormattedTextField txCodigoProduto;
@@ -116,18 +108,15 @@ public class FramePontoDeVendas extends JFrame implements ActionListener {
 	private JLabel lblLogoImagem;
 	private JButton btnConfig;
 
+	private TipoPagamento formaDePagamentoSeleciada;
+
 
 	private FramePontoDeVendas() {
-
-		/* Configuração propriedades do JFrame */
 
 		setTitle("PDV");
 		setUndecorated(true);
 		setBounds(100, 100, 1180, 825);
-		setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
-				
-		/* Configuração propriedades do Panel de fundo */
-		
+		setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
 
 		contentPanel = new CustomGradientPanel(Color.decode("#a855f7"), 
 				Color.decode("#818cf8"));
@@ -138,9 +127,8 @@ public class FramePontoDeVendas extends JFrame implements ActionListener {
 
 		setLocationRelativeTo(null);
 
-		/* components */
-		
 		btnFechar = new JButton();
+		btnFechar.setForeground(Color.white);
 		btnFechar.setIcon(icone24x24("/ccomp/icons/pdv/fechar.png"));
 		btnFechar.setActionCommand(CMD_FECHAR);
 		btnFechar.setContentAreaFilled(false);
@@ -152,6 +140,7 @@ public class FramePontoDeVendas extends JFrame implements ActionListener {
 		btnFechar.setOpaque(false);
 
 		btnFullScreen = new JButton();
+		btnFullScreen.setForeground(Color.white);
 		btnFullScreen.setIcon(icone24x24("/ccomp/icons/pdv/fullscreen.png"));
 		btnFullScreen.setActionCommand(CMD_FULLSCREEN);
 		btnFullScreen.setContentAreaFilled(false);
@@ -232,19 +221,16 @@ public class FramePontoDeVendas extends JFrame implements ActionListener {
 
 
 		pnQuantidade = new JPanel();
-		/* REFATORAR DEPOIS DE FINALIZAR A INTERFACE, WINDOWS BUILDER NÃO FUNCIONA DIREITO GENERAZIANDO BORDERS*/
 		pnQuantidade.setBorder(new TitledBorder(new LineBorder(new Color(255, 255, 255), 2, true), 
 				"Quantidade", TitledBorder.LEFT, TitledBorder.TOP, null, new Color(255, 255, 255)));
 		pnQuantidade.setOpaque(false);
 
 		pnItensVenda = new JPanel();
-		/* REFATORAR DEPOIS DE FINALIZAR A INTERFACE, WINDOWS BUILDER NÃO FUNCIONA DIREITO GENERAZIANDO BORDERS*/
 		pnItensVenda.setBorder(new TitledBorder(new LineBorder(new Color(255, 255, 255), 2, true), 
 				"Itens da Venda", TitledBorder.LEFT, TitledBorder.TOP, null, new Color(255, 255, 255)));
 		pnItensVenda.setOpaque(false);
 
 		pnTotalizador = new JPanel();
-		/* REFATORAR DEPOIS DE FINALIZAR A INTERFACE, WINDOWS BUILDER NÃO FUNCIONA DIREITO GENERAZIANDO BORDERS*/
 		pnTotalizador.setBorder(new TitledBorder(new LineBorder(new Color(255, 255, 255), 2, true), 
 				"Total", TitledBorder.LEFT, TitledBorder.TOP, null, new Color(255, 255, 255)));
 		pnTotalizador.setOpaque(false);
@@ -261,13 +247,13 @@ public class FramePontoDeVendas extends JFrame implements ActionListener {
 		lblLogoImagem = new JLabel("");
 		lblLogoImagem.setHorizontalAlignment(SwingConstants.CENTER);
 		lblLogoImagem.setIcon(Icones.getIcone("/ccomp/icons/pdv/unifeso-logo.png"));
-		
+
 		pnEdicao = new JPanel();
 		pnEdicao.setOpaque(false);
 		pnEdicao.setBorder(new TitledBorder(new LineBorder(new Color(255, 255, 255), 2, true),
 				"Edi\u00E7\u00E3o", TitledBorder.LEFT, TitledBorder.TOP, null, new Color(255, 255, 255)));
 		pnEdicao.setLayout(new FlowLayout(FlowLayout.CENTER, 5, 5));
-		
+
 		JButton btnFinalizarVenda = new JButton("FINALIZAR VENDA");
 		btnFinalizarVenda.addActionListener(this);
 		btnFinalizarVenda.setIcon(icone24x24("/ccomp/icons/pdv/vender.png"));
@@ -283,8 +269,9 @@ public class FramePontoDeVendas extends JFrame implements ActionListener {
 		btnFinalizarVenda.setBorder(new LineBorder(Color.WHITE, 2, true));
 		adicionarAnimacaoMouseBtn(btnFinalizarVenda);
 		pnTipoPagamentos.setLayout(new FlowLayout(FlowLayout.CENTER, 5, 5));
-		
+
 		btnConfig = new JButton();
+		btnConfig.setForeground(Color.white);
 		btnConfig.setIcon(icone24x24("/ccomp/icons/pdv/config.png"));
 		btnConfig.setCursor(Cursor.getPredefinedCursor(Cursor.HAND_CURSOR));
 		btnConfig.setOpaque(false);
@@ -294,77 +281,77 @@ public class FramePontoDeVendas extends JFrame implements ActionListener {
 		btnConfig.setContentAreaFilled(false);
 		btnConfig.setBorder(null);
 		btnConfig.setBackground((Color) null);
-		
-	
+
+
 		GroupLayout gl_contentPanel = new GroupLayout(contentPanel);
 		gl_contentPanel.setHorizontalGroup(
-			gl_contentPanel.createParallelGroup(Alignment.LEADING)
+				gl_contentPanel.createParallelGroup(Alignment.LEADING)
 				.addGroup(gl_contentPanel.createSequentialGroup()
-					.addContainerGap()
-					.addGroup(gl_contentPanel.createParallelGroup(Alignment.TRAILING)
-						.addGroup(gl_contentPanel.createSequentialGroup()
-							.addComponent(lblLogoImagem, GroupLayout.DEFAULT_SIZE, 1154, Short.MAX_VALUE)
-							.addContainerGap())
-						.addGroup(gl_contentPanel.createSequentialGroup()
-							.addComponent(lblTitulo, GroupLayout.PREFERRED_SIZE, 460, GroupLayout.PREFERRED_SIZE)
-							.addPreferredGap(ComponentPlacement.RELATED, 628, Short.MAX_VALUE)
-							.addComponent(btnConfig, GroupLayout.PREFERRED_SIZE, 24, GroupLayout.PREFERRED_SIZE)
-							.addPreferredGap(ComponentPlacement.RELATED)
-							.addComponent(btnFullScreen, GroupLayout.PREFERRED_SIZE, 24, GroupLayout.PREFERRED_SIZE)
-							.addPreferredGap(ComponentPlacement.RELATED)
-							.addComponent(btnFechar, GroupLayout.PREFERRED_SIZE, 24, GroupLayout.PREFERRED_SIZE))
-						.addGroup(gl_contentPanel.createSequentialGroup()
-							.addComponent(pnItensVenda, GroupLayout.DEFAULT_SIZE, GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
-							.addPreferredGap(ComponentPlacement.RELATED)
-							.addComponent(pnEdicao, GroupLayout.PREFERRED_SIZE, 91, GroupLayout.PREFERRED_SIZE)
-							.addContainerGap())
-						.addGroup(gl_contentPanel.createSequentialGroup()
-							.addComponent(pnProduto, GroupLayout.DEFAULT_SIZE, 535, Short.MAX_VALUE)
-							.addPreferredGap(ComponentPlacement.RELATED)
-							.addComponent(pnQuantidade, GroupLayout.PREFERRED_SIZE, 265, GroupLayout.PREFERRED_SIZE)
-							.addPreferredGap(ComponentPlacement.RELATED)
-							.addComponent(pnDescontoAcrescimo, GroupLayout.PREFERRED_SIZE, 342, GroupLayout.PREFERRED_SIZE)
-							.addContainerGap())
-						.addGroup(gl_contentPanel.createSequentialGroup()
-							.addComponent(pnTotalizador, GroupLayout.DEFAULT_SIZE, 512, Short.MAX_VALUE)
-							.addPreferredGap(ComponentPlacement.RELATED)
-							.addComponent(pnTipoPagamentos, GroupLayout.DEFAULT_SIZE, 636, Short.MAX_VALUE)
-							.addContainerGap())
-						.addGroup(gl_contentPanel.createSequentialGroup()
-							.addComponent(btnFinalizarVenda, GroupLayout.DEFAULT_SIZE, 1154, Short.MAX_VALUE)
-							.addContainerGap())))
-		);
+						.addContainerGap()
+						.addGroup(gl_contentPanel.createParallelGroup(Alignment.TRAILING)
+								.addGroup(gl_contentPanel.createSequentialGroup()
+										.addComponent(lblLogoImagem, GroupLayout.DEFAULT_SIZE, 1154, Short.MAX_VALUE)
+										.addContainerGap())
+								.addGroup(gl_contentPanel.createSequentialGroup()
+										.addComponent(lblTitulo, GroupLayout.PREFERRED_SIZE, 460, GroupLayout.PREFERRED_SIZE)
+										.addPreferredGap(ComponentPlacement.RELATED, 628, Short.MAX_VALUE)
+										.addComponent(btnConfig, GroupLayout.PREFERRED_SIZE, 24, GroupLayout.PREFERRED_SIZE)
+										.addPreferredGap(ComponentPlacement.RELATED)
+										.addComponent(btnFullScreen, GroupLayout.PREFERRED_SIZE, 24, GroupLayout.PREFERRED_SIZE)
+										.addPreferredGap(ComponentPlacement.RELATED)
+										.addComponent(btnFechar, GroupLayout.PREFERRED_SIZE, 24, GroupLayout.PREFERRED_SIZE))
+								.addGroup(gl_contentPanel.createSequentialGroup()
+										.addComponent(pnItensVenda, GroupLayout.DEFAULT_SIZE, GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
+										.addPreferredGap(ComponentPlacement.RELATED)
+										.addComponent(pnEdicao, GroupLayout.PREFERRED_SIZE, 91, GroupLayout.PREFERRED_SIZE)
+										.addContainerGap())
+								.addGroup(gl_contentPanel.createSequentialGroup()
+										.addComponent(pnProduto, GroupLayout.DEFAULT_SIZE, 535, Short.MAX_VALUE)
+										.addPreferredGap(ComponentPlacement.RELATED)
+										.addComponent(pnQuantidade, GroupLayout.PREFERRED_SIZE, 265, GroupLayout.PREFERRED_SIZE)
+										.addPreferredGap(ComponentPlacement.RELATED)
+										.addComponent(pnDescontoAcrescimo, GroupLayout.PREFERRED_SIZE, 342, GroupLayout.PREFERRED_SIZE)
+										.addContainerGap())
+								.addGroup(gl_contentPanel.createSequentialGroup()
+										.addComponent(pnTotalizador, GroupLayout.DEFAULT_SIZE, 512, Short.MAX_VALUE)
+										.addPreferredGap(ComponentPlacement.RELATED)
+										.addComponent(pnTipoPagamentos, GroupLayout.DEFAULT_SIZE, 636, Short.MAX_VALUE)
+										.addContainerGap())
+								.addGroup(gl_contentPanel.createSequentialGroup()
+										.addComponent(btnFinalizarVenda, GroupLayout.DEFAULT_SIZE, 1154, Short.MAX_VALUE)
+										.addContainerGap())))
+				);
 		gl_contentPanel.setVerticalGroup(
-			gl_contentPanel.createParallelGroup(Alignment.LEADING)
+				gl_contentPanel.createParallelGroup(Alignment.LEADING)
 				.addGroup(gl_contentPanel.createSequentialGroup()
-					.addGroup(gl_contentPanel.createParallelGroup(Alignment.LEADING)
+						.addGroup(gl_contentPanel.createParallelGroup(Alignment.LEADING)
+								.addGroup(gl_contentPanel.createParallelGroup(Alignment.TRAILING, false)
+										.addGroup(gl_contentPanel.createSequentialGroup()
+												.addGroup(gl_contentPanel.createParallelGroup(Alignment.LEADING)
+														.addComponent(btnFechar, GroupLayout.PREFERRED_SIZE, 24, GroupLayout.PREFERRED_SIZE)
+														.addComponent(btnFullScreen, GroupLayout.PREFERRED_SIZE, 24, GroupLayout.PREFERRED_SIZE))
+												.addGap(18))
+										.addComponent(lblTitulo, GroupLayout.DEFAULT_SIZE, GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
+								.addComponent(btnConfig, GroupLayout.PREFERRED_SIZE, 24, GroupLayout.PREFERRED_SIZE))
+						.addPreferredGap(ComponentPlacement.RELATED)
+						.addComponent(lblLogoImagem, GroupLayout.PREFERRED_SIZE, 153, GroupLayout.PREFERRED_SIZE)
+						.addPreferredGap(ComponentPlacement.RELATED)
+						.addGroup(gl_contentPanel.createParallelGroup(Alignment.BASELINE)
+								.addComponent(pnProduto, GroupLayout.PREFERRED_SIZE, 89, GroupLayout.PREFERRED_SIZE)
+								.addComponent(pnQuantidade, GroupLayout.PREFERRED_SIZE, 89, GroupLayout.PREFERRED_SIZE)
+								.addComponent(pnDescontoAcrescimo, GroupLayout.PREFERRED_SIZE, 89, GroupLayout.PREFERRED_SIZE))
+						.addPreferredGap(ComponentPlacement.UNRELATED)
+						.addGroup(gl_contentPanel.createParallelGroup(Alignment.TRAILING)
+								.addComponent(pnEdicao, GroupLayout.DEFAULT_SIZE, 310, Short.MAX_VALUE)
+								.addComponent(pnItensVenda, GroupLayout.DEFAULT_SIZE, 310, Short.MAX_VALUE))
+						.addPreferredGap(ComponentPlacement.RELATED)
 						.addGroup(gl_contentPanel.createParallelGroup(Alignment.TRAILING, false)
-							.addGroup(gl_contentPanel.createSequentialGroup()
-								.addGroup(gl_contentPanel.createParallelGroup(Alignment.LEADING)
-									.addComponent(btnFechar, GroupLayout.PREFERRED_SIZE, 24, GroupLayout.PREFERRED_SIZE)
-									.addComponent(btnFullScreen, GroupLayout.PREFERRED_SIZE, 24, GroupLayout.PREFERRED_SIZE))
-								.addGap(18))
-							.addComponent(lblTitulo, GroupLayout.DEFAULT_SIZE, GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
-						.addComponent(btnConfig, GroupLayout.PREFERRED_SIZE, 24, GroupLayout.PREFERRED_SIZE))
-					.addPreferredGap(ComponentPlacement.RELATED)
-					.addComponent(lblLogoImagem, GroupLayout.PREFERRED_SIZE, 153, GroupLayout.PREFERRED_SIZE)
-					.addPreferredGap(ComponentPlacement.RELATED)
-					.addGroup(gl_contentPanel.createParallelGroup(Alignment.BASELINE)
-						.addComponent(pnProduto, GroupLayout.PREFERRED_SIZE, 89, GroupLayout.PREFERRED_SIZE)
-						.addComponent(pnQuantidade, GroupLayout.PREFERRED_SIZE, 89, GroupLayout.PREFERRED_SIZE)
-						.addComponent(pnDescontoAcrescimo, GroupLayout.PREFERRED_SIZE, 89, GroupLayout.PREFERRED_SIZE))
-					.addPreferredGap(ComponentPlacement.UNRELATED)
-					.addGroup(gl_contentPanel.createParallelGroup(Alignment.TRAILING)
-						.addComponent(pnEdicao, GroupLayout.DEFAULT_SIZE, 310, Short.MAX_VALUE)
-						.addComponent(pnItensVenda, GroupLayout.DEFAULT_SIZE, 310, Short.MAX_VALUE))
-					.addPreferredGap(ComponentPlacement.RELATED)
-					.addGroup(gl_contentPanel.createParallelGroup(Alignment.TRAILING, false)
-						.addComponent(pnTotalizador, GroupLayout.DEFAULT_SIZE, GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
-						.addComponent(pnTipoPagamentos, GroupLayout.DEFAULT_SIZE, 138, Short.MAX_VALUE))
-					.addPreferredGap(ComponentPlacement.RELATED)
-					.addComponent(btnFinalizarVenda, GroupLayout.PREFERRED_SIZE, 44, GroupLayout.PREFERRED_SIZE))
-		);
-		
+								.addComponent(pnTotalizador, GroupLayout.DEFAULT_SIZE, GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
+								.addComponent(pnTipoPagamentos, GroupLayout.DEFAULT_SIZE, 138, Short.MAX_VALUE))
+						.addPreferredGap(ComponentPlacement.RELATED)
+						.addComponent(btnFinalizarVenda, GroupLayout.PREFERRED_SIZE, 44, GroupLayout.PREFERRED_SIZE))
+				);
+
 		btnExcluirItem = new JButton("Excluir");
 		btnExcluirItem.addActionListener(this);
 		btnExcluirItem.setActionCommand(CMD_EXCLUIR_ITEM);
@@ -377,11 +364,11 @@ public class FramePontoDeVendas extends JFrame implements ActionListener {
 		btnExcluirItem.setForeground(Color.WHITE);
 		btnExcluirItem.setBorder(new LineBorder(Color.WHITE, 2, true));
 		btnExcluirItem.setFocusable(false);
-		
+
 		btnExcluirItem.setIcon(icone24x24("/ccomp/icons/pdv/remover.png"));
 		adicionarAnimacaoMouseBtn(btnExcluirItem);
 		pnEdicao.add(btnExcluirItem);
-		
+
 		btnLimparItens = new JButton("Limpar");
 		btnLimparItens.addActionListener(this);
 		btnLimparItens.setIcon(icone24x24("/ccomp/icons/pdv/limpar-refresh.png"));
@@ -438,16 +425,16 @@ public class FramePontoDeVendas extends JFrame implements ActionListener {
 		listagemItem.addKeyListener(new KeyAdapter() {
 			@Override
 			public void keyPressed(KeyEvent e) {
-				
+
 				if (e.getKeyCode() == KeyEvent.VK_DELETE) 
 					excluirApenasItemSelecionado();
-				
+
 			}
 		});
 
 		pnItensVenda.add(listagemItem, BorderLayout.CENTER);
 
-		mudarFocoQuandoEnter(txCodigoProduto, txQuantidade);
+		mudarFocoQuandoEnter(txCodigoProduto, txQuantidade, false);
 
 		btnLocalizar = new JButton();
 		btnLocalizar.setFocusable(false);
@@ -464,25 +451,27 @@ public class FramePontoDeVendas extends JFrame implements ActionListener {
 
 		Component horizontalStrut_1_1 = Box.createHorizontalStrut(3);
 		pnProduto.add(horizontalStrut_1_1);
-		mudarFocoQuandoEnter(txQuantidade, txDesconto);
-		mudarFocoQuandoEnter(txDesconto, txAcrescimo);
+		mudarFocoQuandoEnter(txQuantidade, txDesconto, false);
+		mudarFocoQuandoEnter(txDesconto, txAcrescimo, false);
 		executarAcaoQuandoEnter(txAcrescimo, (v) -> 
 		{
-
+			long idProduto = Long.valueOf(txCodigoProduto.getText());
+			Optional<Produto> produtoOpt = gerenciadorProduto.encontrarProdutoPorId(idProduto);
+			if (!produtoOpt.isPresent()) {
+				JOptionPane.showMessageDialog(this, "Produto não encontrado no sistema.");
+				return;
+			}
+			Produto produto = produtoOpt.get();
 			ItemVenda itemVenda = new ItemVenda();
-			itemVenda.setIdProduto(Long.valueOf(txCodigoProduto.getText()));
+			itemVenda.setIdProduto(idProduto);
 			itemVenda.setQuantidadeTotal((Double) txQuantidade.getValue());
 			itemVenda.setValorAcrescimo(new BigDecimal((Double)txAcrescimo.getValue()));
 			itemVenda.setValorDesconto(new BigDecimal((Double)txDesconto.getValue()));
-
-
-			Produto produto = gerenciadorProduto.encontrarProdutoPorId(itemVenda.getIdProduto()).get();
 			itemVenda.setValorUnitario(produto.getPreco());
-
 			listagemItem.adicionarItem(itemVenda);
-
 			recalcularEVoltarReiniciarFocus();
-
+			txAcrescimo.setValue(new Double(0D));
+			
 		});
 		contentPanel.setLayout(gl_contentPanel);
 
@@ -498,73 +487,60 @@ public class FramePontoDeVendas extends JFrame implements ActionListener {
 			btnFormaDePagamento.setFont(new Font("Verdana", Font.BOLD, 14));
 			btnFormaDePagamento.setContentAreaFilled(false);
 			btnFormaDePagamento.setOpaque(false);
+			btnFormaDePagamento.setActionCommand("PAGAMENTO@" + Long.toString(pagamento.getId()));
 			btnFormaDePagamento.setForeground(Color.WHITE);
 			btnFormaDePagamento.setBorder(new LineBorder(Color.WHITE, 2, true));
 			btnFormaDePagamento.setFocusable(false);
+			btnFormaDePagamento.addActionListener(FramePontoDeVendas.this);
 			adicionarAnimacaoMouseBtn(btnFormaDePagamento);
 			pnTipoPagamentos.add(btnFormaDePagamento);
-			
+
 		});
 
 
-		adicionarEfeitoEmTextField(txCodigoProduto);
-		adicionarEfeitoEmTextField(txQuantidade);
-		adicionarEfeitoEmTextField(txAcrescimo);
-		adicionarEfeitoEmTextField(txDesconto);
+		adicionarEfeitoDeFoco(txCodigoProduto);
+		adicionarEfeitoDeFoco(txQuantidade);
+		adicionarEfeitoDeFoco(txAcrescimo);
+		adicionarEfeitoDeFoco(txDesconto);
+		adicionarEfeitoDeFoco(btnFullScreen);
+		adicionarEfeitoDeFoco(btnFechar);
+		adicionarEfeitoDeFoco(btnConfig);
 
+		txCodigoProduto.requestFocusInWindow();
+		FrameConfiguracao.iniciarConfiguradorPDV(this);
+		JOptionPane.showMessageDialog(null, "<html>Utilize o <b>ENTER</b> para alternar entre Código do Produto/Qt./Desconto e Acréscimo.</html>");
 	}
-	
-	public static void criarPontoDeVendas() {
-		FramePontoDeVendas pontoDeVendas = new FramePontoDeVendas();
-		pontoDeVendas.setVisible(true);
-	}
-	
-	private void excluirApenasItemSelecionado() {
-		if (listagemItem.getSelectedIndex() != -1) {
-			listagemItem.removerSelecionado();
-			recalcularEVoltarReiniciarFocus();
-		} else {
-			JOptionPane.showMessageDialog(this, "Selecione um item para excluir!");
-		}
-	}
-	
-	
-	/* EXPERIMENTAL PORRA!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!! */
-	private void adicionarEfeitoEmTextField(JTextComponent component) {
 
+
+
+	private void adicionarEfeitoDeFoco(JComponent component) {
 		component.addFocusListener(new FocusAdapter() {
-			
-			Thread animacaoThread;
+			volatile Thread animacaoThread;
 			volatile boolean emFoco = false;
-			
 			@Override
 			public void focusGained(FocusEvent e) {
 				emFoco = true;
-				component.setText("");
-				/* vai dar merda uma hora */
-				if (animacaoThread != null)
-					animacaoThread.interrupt();
-				
-				if (animacaoThread == null) {
-					animacaoThread = new Thread(new Runnable() {
-						@Override
-						public void run() {
-							for (int i = 0; i < 2 && emFoco; i++) {
-								try {
-									component.setBorder(new MatteBorder(0, 0, 3, 0, Color.BLACK));
-									Thread.sleep(100L);
-									component.setBorder(new MatteBorder(0, 0, 3, 0, contentPanel.getColorTop()));
-									Thread.sleep(100L);
-								} catch (InterruptedException e) {/* ignorar */}	
-								component.setBorder(null);
-							}
+
+				if (component instanceof JTextComponent)
+					((JTextComponent)component).setText("");
+
+				animacaoThread = new Thread(new Runnable() {
+					@Override
+					public void run() {
+						for (int i = 0; i < 2 && emFoco; i++) {
+							try {
+								component.setBorder(new MatteBorder(0, 0, 3, 0, component.getForeground()));
+								Thread.sleep(100L);
+								component.setBorder(new MatteBorder(0, 0, 3, 0, contentPanel.getColorTop()));
+								Thread.sleep(100L);
+							} catch (InterruptedException e) {/* ignorar */}	
+							component.setBorder(null);
 						}
-					});
-					animacaoThread.start();
-				}
+					}
+				});
+				animacaoThread.start();
 				super.focusGained(e);
 			}
-
 			@Override
 			public void focusLost(FocusEvent e) {
 				emFoco = false;
@@ -573,85 +549,138 @@ public class FramePontoDeVendas extends JFrame implements ActionListener {
 					animacaoThread.interrupt();
 					animacaoThread = null;
 				}
-
-				
 				super.focusLost(e);
 			}
-
 		});
 
 	}
 
-	/* MELHORAR DEPOIS */
 	private void adicionarAnimacaoMouseBtn(JButton button) {
-
 		button.addMouseListener(new MouseAdapter() {
-
 			final Color originalForeground = button.getForeground();
-
 			@Override
 			public void mouseEntered(MouseEvent e) {
 				button.setOpaque(true);
 				button.setBackground(Color.WHITE);
 				button.setForeground(contentPanel.getColorBottom());
 			}
-
 			@Override
 			public void mouseExited(MouseEvent e) {
 				button.setOpaque(false);
 				button.setBackground(Color.WHITE);
 				button.setForeground(originalForeground);
 			}
-
 		});
+	}
 
+	private void excluirApenasItemSelecionado() {
+		if (listagemItem.getSelectedIndex() != -1) {
+			listagemItem.removerSelecionado();
+			recalcularEVoltarReiniciarFocus();
+		} else {
+			JOptionPane.showMessageDialog(this, "Selecione um item para excluir!");
+		}
+	}
+
+	private void iniciarLocalizadorDeProduto() {
+		Produto produtoSelecionado = FrameLocalizadorProduto.localizarProduto();
+		if (produtoSelecionado != null) {
+			txCodigoProduto.setValue(produtoSelecionado.getId());
+			txQuantidade.requestFocus();
+		} else {
+			JOptionPane.showMessageDialog(this, "Não foi encontrado um produto no localizador.");
+		}
+	}
+
+	private void excluirTodosOsItens(boolean perguntarAntes) {
+		int confirmacao = 0;
+		if (perguntarAntes) {
+			confirmacao = JOptionPane.showConfirmDialog(this, "Tem certeza que deseja excluir todos os itens?");
+		} else { 
+			confirmacao = JOptionPane.YES_OPTION;
+		}
+		if (confirmacao == JOptionPane.YES_OPTION) {
+			listagemItem.apagarInformacoesDeVenda();
+			recalcularTotalizadorVenda();
+		}
 	}
 
 	@Override
-	/* MELHORAR DEPOIS */
 	public void actionPerformed(ActionEvent e) {
 
 		if (e.getActionCommand().equals(CMD_FECHAR)) 
-		{
 			confirmarFecharPontoDeVendas();
-		}
+
 		else if (e.getActionCommand().equals(CMD_FULLSCREEN)) 
-		{
 			alternarParaTelaCheiaOuNormal();
-		}
+
 		else if (e.getActionCommand().equals(CMD_LOCALIZAR)) 
-		{
-			Produto produtoSelecionado = FrameLocalizadorProduto.localizarProduto();
-			if (produtoSelecionado != null) {
-				txCodigoProduto.setValue(produtoSelecionado.getId());
-				txQuantidade.requestFocus();
-			} else {
-				JOptionPane.showMessageDialog(this, "Não produto encontrado no localizador de produto.");
-			}
-		}
-		
+			iniciarLocalizadorDeProduto();
+
 		else if (e.getActionCommand().equals(CMD_EXCLUIR_ITEM)) 
-		{
 			excluirApenasItemSelecionado();
-		}
-		
+
 		else if (e.getActionCommand().equals(CMD_LIMPAR_ITENS)) 
-		{
-			int confirmacao = JOptionPane.showConfirmDialog(this, "Tem certeza que deseja excluir todos os itens?");
-			if (confirmacao == JOptionPane.YES_OPTION) {
-				listagemItem.apagarInformacoesDeVenda();
-				recalcularTotalizadorVenda();
-			}
-		}
+			excluirTodosOsItens(true);
+
 		else if (e.getActionCommand().equals(CMD_CONFIG))
+			FrameConfiguracao.iniciarConfiguradorPDV(this);
+
+		else if (e.getActionCommand().equals(CMD_FINALIZAR_VENDA))
+			finalizarVenda();
+
+		else if (e.getActionCommand().startsWith("PAGAMENTO@")) 
 		{
-			FrameConfiguracao configuracao = new FrameConfiguracao(this);
-			configuracao.setVisible(true);
+			String idStrFormaDePagamento = e.getActionCommand().split("@")[1];
+			Long idFormaDePagamento = Long.parseLong(idStrFormaDePagamento);
+			configurarFormaDePagamentoNaVenda(idFormaDePagamento);
 		}
 
 	}
 
-	/* GENERALIZAR TOTALIZADOR, FrameImpressaoVenda TAMBÉM FAZ ESSA CONTA */
+	private void finalizarVenda() {
+
+		if (formaDePagamentoSeleciada == null) {
+			JOptionPane.showMessageDialog(this, "Antes de proseeguir com a finalização da venda,\nselecione uma forma de pagamento.");
+			return;
+		}
+		
+		LocalDateTime horarioFinalizacaoVenda = LocalDateTime.now();
+		List<ItemVenda> totalizadorItens = new ArrayList<ItemVenda>();
+		listagemItem.consumirItensDaListagem(itemVenda -> 
+		totalizadorItens.add(itemVenda));
+
+		/* atualizar data de ultima hora dos produtos */
+		totalizadorItens.stream()
+		.map(itemVenda -> gerenciadorProduto
+				.encontrarProdutoPorId(itemVenda.getIdProduto())
+				.get())
+		.forEach(produto -> 
+		produto.setDataUltimaVenda(horarioFinalizacaoVenda));
+
+		/* criar venda */
+		Venda venda = new Venda(totalizadorItens, horarioFinalizacaoVenda, formaDePagamentoSeleciada);
+
+		GerenciadorSistemaFacade.getInstancia()
+			.getGerenciadorVenda().inserirVendaAoSistema(venda);
+		
+		new FrameImpressaoVenda(venda, gerenciadorProduto);
+
+		JOptionPane.showMessageDialog(null, "Venda finalizada!");
+		recalcularEVoltarReiniciarFocus();
+		excluirTodosOsItens(false);
+
+	}
+
+	private void configurarFormaDePagamentoNaVenda(Long id) {
+		TipoPagamento pagamento = gerenciadorTipoPagamento.encontrarPagamentoPorId(id);
+		int confirmacao = JOptionPane.showConfirmDialog(this, "Forma de pagamento \"" + 
+				pagamento.getNome() + "\" Selecionada. Confirmar?");
+		if (confirmacao == JOptionPane.YES_OPTION) {
+			formaDePagamentoSeleciada = pagamento;
+		}
+	}
+
 	private void recalcularTotalizadorVenda() {
 		List<BigDecimal> totalizadorItens = new ArrayList<BigDecimal>();
 		listagemItem.consumirItensDaListagem(itemVenda -> 
@@ -660,20 +689,6 @@ public class FramePontoDeVendas extends JFrame implements ActionListener {
 				.stream()
 				.reduce(BigDecimal.ZERO, BigDecimal::add)
 				.doubleValue());
-	}
-
-	/* SERA USADO PARA REFATORAR O CÓDIGO, NÃO MEXER */
-	private JPanel configurarPanelEstilizado(JPanel panel, String titulo) {
-		panel.setBorder(new TitledBorder(new LineBorder(new Color(255, 255, 255), 2, true), 
-				titulo, TitledBorder.LEFT, TitledBorder.TOP, null, new Color(255, 255, 255)));
-		panel.setOpaque(false);
-		return panel;
-	}
-
-	/* SERA USADO PARA REFATORAR O CÓDIGO, NÃO MEXER */
-	@SuppressWarnings("unused")
-	private JPanel configurarPanelEstilizado(String titulo) {
-		return configurarPanelEstilizado(new JPanel(), titulo);
 	}
 
 	private NumberFormatter criarFormatacaoDecimal(String prefixo) {
@@ -699,15 +714,14 @@ public class FramePontoDeVendas extends JFrame implements ActionListener {
 		contentPanel.setBorder(new CompoundBorder(new LineBorder(contentPanel.getColorTop()
 				.darker(), 2), new EmptyBorder(5, 5, 5, 5)));
 		listagemItem.setSelecaoCor(contentPanel.getColorBottom().darker());
-
 		repaint();
 	}
-	
+
 	private void restarTodosValores() {
 		txAcrescimo.setValue(0D);
 		txDesconto.setValue(0D);
 	}
-	
+
 	private void executarAcaoQuandoEnter(JComponent origem, Consumer<Void> consumer) {
 		if (consumer != null && origem != null) {
 			origem.addKeyListener(new KeyAdapter() 
@@ -722,38 +736,41 @@ public class FramePontoDeVendas extends JFrame implements ActionListener {
 	}
 
 
-	private void mudarFocoQuandoEnter(JComponent origem, JComponent componenteParaFoco) {
+	private void mudarFocoQuandoEnter(JComponent origem, JComponent componenteParaFoco, boolean limpar) {
 		executarAcaoQuandoEnter(origem, (v) ->  
 		{
 			componenteParaFoco.requestFocus();
-			if (componenteParaFoco instanceof JFormattedTextField)
+			if (componenteParaFoco instanceof JFormattedTextField && limpar)
 				((JFormattedTextField)componenteParaFoco).setText("");
 		});
 	}
 
-	
+
 	private void confirmarFecharPontoDeVendas() {
 		int opcaoSelecionada = JOptionPane.showConfirmDialog(this, "Tem certeza que deseja fechar?");
 		if (opcaoSelecionada == JOptionPane.YES_OPTION) {
-			Runtime.getRuntime().exit(1);
+			dispose();
 		}
 	}
 
 	private void alternarParaTelaCheiaOuNormal() {
-
 		if (getExtendedState() == JFrame.NORMAL)
 			setExtendedState(MAXIMIZED_BOTH);
 		else
 			setExtendedState(NORMAL);
-
 	}
-	/* QUE BOSTA, MOVER PARA "Icones#getIcon" */
+
 	private ImageIcon icone24x24(String caminho) {
 		return Utilitarios.mudarScala(Icones.getIcone(caminho), 24, 24);
 	}
 
 	private ImageIcon icone64x64(String caminho) {
 		return Utilitarios.mudarScala(Icones.getIcone(caminho), 64, 64);
+	}
+
+	public static void criarPontoDeVendas() {
+		FramePontoDeVendas pontoDeVendas = new FramePontoDeVendas();
+		pontoDeVendas.setVisible(true);
 	}
 
 }

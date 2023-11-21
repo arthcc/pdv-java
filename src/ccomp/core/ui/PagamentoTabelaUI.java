@@ -6,25 +6,25 @@ import javax.swing.JTable;
 import javax.swing.ListSelectionModel;
 import javax.swing.table.DefaultTableModel;
 
-import ccomp.dominios.unidade.GerenciadorUnidade;
-import ccomp.dominios.unidade.Unidade;
+import ccomp.dominios.formaPagamento.GerenciadorTipoPagamento;
+import ccomp.dominios.formaPagamento.TipoPagamento;
 import ccomp.facade.GerenciadorSistemaFacade;
 
-public class UnidadeTabelaUI extends JTable {
+public class PagamentoTabelaUI extends JTable {
 
 
-	private final GerenciadorUnidade gerenciadorUnidade;
+	private final GerenciadorTipoPagamento gerenciadorTipoPagamento;
 
 	{
-		gerenciadorUnidade = GerenciadorSistemaFacade.getInstancia()
-				.getGerenciadorUnidade();
+		gerenciadorTipoPagamento = GerenciadorSistemaFacade.getInstancia()
+				.getGerenciadorTipoPagamento();
 	}
 
 	private static final long serialVersionUID = 2101965585496665196L;
 
 	private DefaultTableModel tableModel;
 	
-	public UnidadeTabelaUI() {
+	public PagamentoTabelaUI() {
 		super();
 		tableModel = new CustomTableModel();
 		tableModel.addColumn("ID");
@@ -38,49 +38,45 @@ public class UnidadeTabelaUI extends JTable {
 	
 	}
 	
-	public void carregarUnidadesDoSistema(String filtroDeNome) {
+	public void carregarPagamentosDoSistema(String filtroDeNome) {
 		limparTabela();
-		gerenciadorUnidade.obterTodasUnidades()
+		gerenciadorTipoPagamento.obterTodosPagamentos()
 			.stream()
 			.filter(p -> filtroDeNome == null || (filtroDeNome != null && p.getNome().contains(filtroDeNome.toUpperCase())))
-			.forEach(produto -> 
+			.forEach(pagamento -> 
 			{
-				tableModel.addRow(criarDadosUnidade(produto));
+				tableModel.addRow(criarDadosPagamento(pagamento));
 			});
 		clearSelection();
 		revalidate();
 	}
 	
-	
-	private Object[] criarDadosUnidade(Unidade unidade) {
-		
-		Object[] dados = new Object[7];
-		dados[0] =  unidade.getId();
-		dados[1] = unidade.getNome();
-		
-		return dados;
-		
-	}
-	
-	public Long getIdUnidadeSelecionado() {
+	public Long getIdPagamentoSelecionado() {
 		int linhaSelecionadaIndex = getSelectedRow();
 		if (linhaSelecionadaIndex == -1) {
 			return -1L;
 		}
-		Long idUnidade = (Long)
+		Long idPagamento = (Long)
 				((Vector<?>)((DefaultTableModel)tableModel)
 					.getDataVector()
 					.get(linhaSelecionadaIndex))
 				.get(0);
-		return idUnidade;
+		return idPagamento;
+	}
+	
+	private Object[] criarDadosPagamento(TipoPagamento pagamento) {
+		Object[] dados = new Object[7];
+		dados[0] = pagamento.getId();
+		dados[1] = pagamento.getNome();
+		return dados;
 	}
 	
 	public void limparTabela() {
 		tableModel.getDataVector().clear();
 	}
 	
-	public void carregarUnidadesDoSistema() {
-		carregarUnidadesDoSistema(null);
+	public void carregarPagamentosDoSistema() {
+		carregarPagamentosDoSistema(null);
 	}
 	
 }
